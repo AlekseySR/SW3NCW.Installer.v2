@@ -70,36 +70,6 @@ int main(int argc, char** argv) {
 			ProgCfg->ShowCommands();
 		}
 	}
-	/*char* inCommand = argv[1];
-	if (inCommand == nullptr) {
-		ProgCfg->About();
-	}
-	else if (!strcmp(inCommand, "install")) {
-		Install(L);
-	}
-	else if (!strcmp(inCommand, "checkmod")) {
-		ProgCfg->CheckModVersion();
-		ProgCfg->CheckModFiles();
-	}
-	else if (!strcmp(inCommand, "refresh")) {
-		CheckFiles = ProgCfg->ParseLuaFiles(L);
-		if (!CheckFiles) {
-			Print(COLOURS::RED, "cannot find any mod to install");
-			return 0;
-		}
-		Print(COLOURS::YELLOW, "Information refreshed");
-	}
-	else if (!strcmp(inCommand, "checkupd")) {
-		ProgCfg->CheckUpdVersion();
-	}
-	else if (!strcmp(inCommand, "about")) {
-		ProgCfg->About();
-	}
-	else
-	{
-		Print(COLOURS::RED, "Error! Unknown input.");
-		ProgCfg->ShowCommands();
-	}*/
 
 	SetConsoleOutputCP(866);
 	lua_close(L);

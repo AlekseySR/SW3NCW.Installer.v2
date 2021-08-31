@@ -95,7 +95,7 @@ void Install(lua_State* L) {
 }
 
 // это поточная функция, вызывается для каждого списка в отдельном потоке
-void InstallFiles(std::list<std::string> files, std::string src, std::string dest) {
+void InstallFiles(std::list<std::string>& files, std::string src, std::string dest) {
 	std::string fileName, fullPath1, fullPath2;
 	for (const auto& i : files)
 	{
