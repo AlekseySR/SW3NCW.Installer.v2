@@ -11,18 +11,38 @@ extern std::shared_ptr<ProgConfig> ProgCfg;
 // 2. Распаковка архива в ней
 // По окончании действия поточной функции всё содержимое временной папки перенести в папку с игрой, за собой убрать мусор.
 
+/*
+	logic:
+	if lua parsing function returned bad results outside installation sequence,
+	we give the user try to fix it (add missed files or fix bad lua fields) and push error message to std::cout.
+
+	But if he didn't it and started the installation sequence, we throw the exception. Mod must install correctly.
+*/
+
 void Install(lua_State* L) {
 
 	std::string path = BrowseForFolder(
 		"Choose the Star Wolves 3 Civil War path",
 		"C:\\Program Files (x86)"
 	);
+	// if you closed the window with close buttons - back to menu
+	if (path.empty()) return;
+
+	// check if it's a game directory by check binkw32.dll existance
+	std::string checkFile = path + "binkw32.dll";
+	if (!fileExists(checkFile.c_str())) {
+		Print(COLOURS::RED, "Attempt to start installation sequence with wrong game directory.");
+		return;
+	}
+
+	bool CheckFiles = ProgCfg->ParseLuaFiles(L);
+	if (!CheckFiles) {
+		throw std::exception("Attempt to start installation sequence with bad parsed lua result.");
+	}
+
 	Print(COLOURS::YELLOW, "Install to: %s\n", path.c_str());
 
-	ProgCfg->CheckModFiles();
-	std::cout << std::endl;
-
-	std::string tempPath = path + "\\DataTemp\\";
+	std::string tempPath = path + "DataTemp\\";
 	fs::create_directory(tempPath);
 
 	std::string fileName, fullPath1, fullPath2;
@@ -31,30 +51,25 @@ void Install(lua_State* L) {
 
 	const auto copyOptions = fs::copy_options::update_existing | fs::copy_options::recursive;
 
-
-	// Логика такая: если не один из указываемых файлов не найден, установка прекращается.
-	// Это чтобы мод установился целиком, или не установился вообще.
-	for (const auto& i : files)
-	{
+	for (const auto& i : files) {
 		fullPath1 = filePath + i;
 
-		if (!fileExists(fullPath1.c_str()))
-		{
-			Print(COLOURS::RED, "Error! File %s is missed!", i.c_str());
-			return;
+		if (!fileExists(fullPath1.c_str())) {
+			throw std::exception("Attempt to start installation sequence with missed files.");
 		}
 	}
 
-	// делим выполнение задачи на 2 потока CPU
+	// multi-thread logic
 	auto middle = std::next(files.begin(), files.size() / 2);
 
 	std::list<std::string> thList1(files.begin(), middle);
 	std::list<std::string> thList2(middle, files.end());
 
-	std::thread th1(InstallFiles, thList1, filePath, tempPath);
-	std::thread th2(InstallFiles, thList2, filePath, tempPath);
+	std::thread th1(InstallFiles, std::reference_wrapper(thList1), filePath, tempPath);
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::thread th2(InstallFiles, std::reference_wrapper(thList2), filePath, tempPath);
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-	// задаем поведение потока дожидаться своего выполнения
 	th1.join();
 	th2.join();
 
@@ -94,11 +109,10 @@ void Install(lua_State* L) {
 	*/
 }
 
-// это поточная функция, вызывается для каждого списка в отдельном потоке
+// thread method for specific container "files"
 void InstallFiles(std::list<std::string>& files, std::string src, std::string dest) {
 	std::string fileName, fullPath1, fullPath2;
-	for (const auto& i : files)
-	{
+	for (const auto& i : files) {
 		fileName = i;
 		Print(COLOURS::STD,
 			"InstallFiles in thread: %d, \tfileName: %s", std::this_thread::get_id(), fileName.c_str()
@@ -106,13 +120,11 @@ void InstallFiles(std::list<std::string>& files, std::string src, std::string de
 
 		fullPath1 = src + fileName;
 		fullPath2 = dest + fileName;
-		if (fileExists(fullPath2.c_str()))
-		{
+		if (fileExists(fullPath2.c_str())) {
 			Print(COLOURS::YELLOW, "File %s is already exist in %s folder, skipping...", fileName.c_str(), dest.c_str());
 			continue;
 		}
-		if (fileExists(fileName.c_str()))
-		{
+		if (fileExists(fileName.c_str())) {
 			Print(COLOURS::YELLOW, "Copied %s from %s to %s", fileName.c_str(), src.c_str(), dest.c_str());
 			fs::copy(src, dest);
 		}
@@ -122,12 +134,11 @@ void InstallFiles(std::list<std::string>& files, std::string src, std::string de
 		// Распакованный контент переносится на директорию выше, в папку с игрой -> Data
 		// 
 		// небольшая задержка для переключения цвета консоли
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 }
 
-bool FileCopy(std::wstring& from, std::wstring& to)
-{
+bool FileCopy(std::wstring& from, std::wstring& to) {
 	std::ifstream SrcFile(from, std::ifstream::binary);
 	std::ofstream DestFile(to, std::ifstream::binary);
 
@@ -151,12 +162,11 @@ bool FileCopy(std::wstring& from, std::wstring& to)
 	return false;
 }
 
-std::string BrowseForFolder(std::string textTitle, std::string InitPath)
-{
+std::string BrowseForFolder(std::string textTitle, std::string InitPath) {
 	HWND console = ::GetConsoleWindow();
 
 	char* destbuff = new char[32768];
-	std::string result;
+	std::string result = "";
 
 	BROWSEINFOA bi = { 0 };
 	ZeroMemory(&bi, sizeof(bi));
@@ -175,42 +185,30 @@ std::string BrowseForFolder(std::string textTitle, std::string InitPath)
 
 	LPITEMIDLIST pidl = ::SHBrowseForFolderA(&bi);
 
-	if (pidl)
-	{
+	if (pidl) {
 		SHGetPathFromIDListA(pidl, (LPSTR)destbuff);
-
-		// Вопрос к знатокам: что лучше? это, или то, что в цикле?
 		result = destbuff;
-		/*for (int i = 0; i < wcslen(destbuff); i++)
-		{
-			result += destbuff[i];
-			std::wcout << result << std::endl;
-		}*/
-		fflush(stdout);
-		return result;
+		result += "\\";
 	}
-	// не забываем убирать за собой
+	// don't forget to clean the waste
 	delete[] destbuff;
-	return "";
+	return result;
 }
 
-int __stdcall BrowsePathProc(HWND hWnd, UINT message, LPARAM lParam, LPARAM pData)
-{
-	wchar_t* szDir = new wchar_t[32768];
+int __stdcall BrowsePathProc(HWND hWnd, UINT message, LPARAM lParam, LPARAM pData) {
+	char* szDir = new char[32768];
 	switch (message)
 	{
-	case BFFM_INITIALIZED:
-	{
+	case BFFM_INITIALIZED: {
 		LPCTSTR InitialPath = reinterpret_cast<LPCTSTR>(pData);
 		SendMessage(hWnd, BFFM_SETSELECTION, TRUE, reinterpret_cast<LPARAM>(InitialPath));
+		break;
 	}
-	break;
-	case BFFM_SELCHANGED:
-	{
-		if (SHGetPathFromIDListW((LPITEMIDLIST)lParam, szDir))
+	case BFFM_SELCHANGED: {
+		if (SHGetPathFromIDListA((LPITEMIDLIST)lParam, szDir))
 			SendMessage(hWnd, BFFM_SETSTATUSTEXT, 0, (LPARAM)szDir);
+		break;
 	}
-	break;
 	}
 	delete[] szDir;
 	return false;

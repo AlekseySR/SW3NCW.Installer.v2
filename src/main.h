@@ -9,14 +9,16 @@
 #include <fstream>
 #include <filesystem>
 #include <string>
+#include <vector>
 #include <list>
 #include <clocale>
 #include <memory>
+#include <thread>
+#include <chrono>
 #include <Shlwapi.h>
 #include <shlobj.h>
 
-extern "C"
-{
+extern "C" {
 #include "lua/include/lua.h"
 #include "lua/include/lauxlib.h"
 #include "lua/include/lualib.h"

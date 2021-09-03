@@ -28,18 +28,26 @@ extern "C"
 			this->filepath = "modinfo\\";
 		}
 
-		void CheckModVersion() {
+		void CheckModInfo() {
+			if (this->ModName.empty() || this->ModVersion.empty() || this->ModFiles.empty())
+				throw std::exception("Main object of class has unitialized field!");
+
 			Print(14, "\nName:\t %s", this->ModName.c_str());
 			Print(14, "Ver:\t %s", this->ModVersion.c_str());
-		}
-
-		void CheckModFiles() {
-			Print(15, "Available content to install:");
-			for (const auto& i : GetModFiles()) { Print(14, "%s", i.c_str()); }
+			Print(14, "Available content to install:");
+			for (const auto& i : GetModFiles()) {
+				Print(14, "file: %s", i.c_str());
+				std::string filename = this->filepath + i;
+				if (!fileExists(filename.c_str()))
+				{
+					std::string filename = this->filepath + i.c_str();
+					Print(14, "%s is not exist in modinfo directory!", filename);
+				}
+			}
 		}
 
 		void CheckUpdVersion() {
-			Print(14, "CheckUpdVersion(): Under construction!");
+			Print(14, "This function is under construction!");
 			//ShellExecute(0, 0, L"https://www.elite-games.ru/conference/viewtopic.php?t=65403&sid=51db6023aaa54b811c9f3335773bdd46", 0, 0, SW_SHOW);
 		}
 
@@ -56,7 +64,7 @@ extern "C"
 				"checkfiles:\t check mod files in modinfo folder which are going to be installed,\n"
 				"refresh:\t refresh database of modinfo,\n"
 				"checkupd:\t check updates of a programm,\n"
-				"exit:\t close the programm,\n"
+				"exit:\t\t close the programm\n"
 			);
 		}
 

@@ -7,8 +7,7 @@
 #pragma warning(disable:4996)
 #endif
 
-std::string StrFormat(const std::string fmt_str, ...)
-{
+std::string StrFormat(const std::string fmt_str, ...) {
 	int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
 	std::unique_ptr<char[]> formatted;
 	va_list ap;
@@ -31,14 +30,13 @@ std::string StrFormat(const std::string fmt_str, ...)
 	return std::string(formatted.get());
 }
 
-bool getFileContent(std::string FilePath)//, std::vector<std::string>& vecOfStrs)
+bool getFileContent(std::string FilePath, std::vector<std::string>& vecOfStrs)
 {
 	// Open the File
 	std::ifstream in(FilePath, std::ios::in | std::ios::binary);
 
 	// Check if object is valid
-	if (!in)
-	{
+	if (!in) {
 		std::cerr << "Cannot open the File : " << FilePath << std::endl;
 		return false;
 	}
@@ -47,12 +45,10 @@ bool getFileContent(std::string FilePath)//, std::vector<std::string>& vecOfStrs
 	std::string str;
 	// Read the next line from File untill it reaches the end.
 	//while (getline(in, str))
-	while (std::getline(in, str))
-	{
+	while (std::getline(in, str)) {
 		// Line contains string of length > 0 then save it in vector
-		if (str.size() > 0)
-		{
-			//vecOfStrs.push_back(str);
+		if (str.size() > 0) {
+			vecOfStrs.push_back(str);
 			std::cout << str << std::endl << std::endl;
 		}
 	}
@@ -62,8 +58,7 @@ bool getFileContent(std::string FilePath)//, std::vector<std::string>& vecOfStrs
 	return true;
 }
 
-void Print(int colourIndex, const char* format, ...)
-{
+void Print(int colourIndex, const char* format, ...) {
 	int ColourIndex = colourIndex;
 	if (!ColourIndex) ColourIndex = COLOURS::STD;
 
@@ -80,16 +75,14 @@ void Print(int colourIndex, const char* format, ...)
 	SetConsoleTextAttribute(StdOut, COLOURS::STD);
 }
 
-bool fileExists(const char* file)
-{
+bool fileExists(const char* file) {
 	DWORD dwAttrib = GetFileAttributesA(file);
 
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 bool CheckLua(lua_State* L, int result) {
-	if (LUA_OK != result)
-	{
+	if (LUA_OK != result) {
 		Print(COLOURS::RED, lua_tostring(L, -1));
 		lua_pop(L, 1);
 		return false;
@@ -98,8 +91,7 @@ bool CheckLua(lua_State* L, int result) {
 }
 
 // String to WString
-std::wstring s2ws(const std::string& str)
-{
+std::wstring s2ws(const std::string& str) {
 	using convert_typeX = std::codecvt_utf8<wchar_t>;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;
 
@@ -107,8 +99,7 @@ std::wstring s2ws(const std::string& str)
 }
 
 // WString to String
-std::string ws2s(const std::wstring& wstr)
-{
+std::string ws2s(const std::wstring& wstr) {
 	using convert_typeX = std::codecvt_utf8<wchar_t>;
 	std::wstring_convert<convert_typeX, wchar_t> converterX;
 
