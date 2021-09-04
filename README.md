@@ -1,6 +1,6 @@
 # SW3NCW.Installer.v2
 
-This project is developed for edicational purposes.
+This project is developed for edicational purposes and combines object oriented with procedural programming paradigms.
 If you want to compile it, set x64-debug or x64-release settings.
 
 Features:
