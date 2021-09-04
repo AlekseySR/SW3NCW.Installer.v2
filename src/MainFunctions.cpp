@@ -8,12 +8,14 @@
 #endif
 
 std::string StrFormat(const std::string fmt_str, ...) {
-	int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
+	// Reserve two times as much as the length of the fmt_str
+	int final_n, n = ((int)fmt_str.size()) * 2;
+
 	std::unique_ptr<char[]> formatted;
 	va_list ap;
 	while (1)
 	{
-		formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+		formatted.reset(new char[n]);
 		strcpy(&formatted[0], fmt_str.c_str());
 		va_start(ap, fmt_str);
 		final_n = vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
@@ -32,10 +34,8 @@ std::string StrFormat(const std::string fmt_str, ...) {
 
 bool getFileContent(std::string FilePath, std::vector<std::string>& vecOfStrs)
 {
-	// Open the File
 	std::ifstream in(FilePath, std::ios::in | std::ios::binary);
 
-	// Check if object is valid
 	if (!in) {
 		std::cerr << "Cannot open the File : " << FilePath << std::endl;
 		return false;
@@ -43,17 +43,13 @@ bool getFileContent(std::string FilePath, std::vector<std::string>& vecOfStrs)
 
 
 	std::string str;
-	// Read the next line from File untill it reaches the end.
-	//while (getline(in, str))
 	while (std::getline(in, str)) {
-		// Line contains string of length > 0 then save it in vector
 		if (str.size() > 0) {
 			vecOfStrs.push_back(str);
 			std::cout << str << std::endl << std::endl;
 		}
 	}
 
-	//Close The File
 	in.close();
 	return true;
 }
@@ -71,7 +67,6 @@ void Print(int colourIndex, const char* format, ...) {
 	printf("\n");
 	va_end(args);
 
-	// set to default
 	SetConsoleTextAttribute(StdOut, COLOURS::STD);
 }
 

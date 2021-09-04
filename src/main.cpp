@@ -27,12 +27,10 @@ int main(int argc, char** argv) {
 	try
 	{
 		luaL_openlibs(L);
-		bool CheckFiles;
 
-		// переопределяем новый объект класса shared_ptr
 		ProgCfg.reset(new ProgConfig());
 
-		CheckFiles = ProgCfg->ParseLuaFiles(L);
+		bool CheckFiles = ProgCfg->ParseLuaFiles(L);
 		if (!CheckFiles) {
 			Print(COLOURS::RED, "Cannot find any mod to install. Try to 'refresh'.");
 		}
@@ -40,23 +38,23 @@ int main(int argc, char** argv) {
 		std::cout << "ASRinstaller: ";
 		std::string input;
 		while (std::getline(std::cin, input)) {
-			if (!input.find("install")) {
+			if (input == "install") {
 				Install(L);
 			}
-			else if (!input.find("checkmod")) {
+			else if (input == "checkmod") {
 				ProgCfg->CheckModInfo();
 			}
-			else if (!input.find("refresh")) {
+			else if (input == "refresh") {
 				ProgCfg->ParseLuaFiles(L);
 				Print(COLOURS::YELLOW, "Information refreshed.");
 			}
-			else if (!input.find("checkupd")) {
+			else if (input == "checkupd") {
 				ProgCfg->CheckUpdVersion();
 			}
-			else if (!input.find("about") || input.empty()) {
+			else if ((input == "about") || input.empty()) {
 				ProgCfg->About();
 			}
-			else if (!input.find("exit")) {
+			else if (input == "exit") {
 				break;
 			}
 			else
@@ -70,16 +68,6 @@ int main(int argc, char** argv) {
 		lua_close(L);
 		return 0;
 	}
-	catch (const std::exception& ex)
-	{
-		Print(COLOURS::RED, ex.what());
-		do
-		{
-			Print(COLOURS::RED, "Press any key to exit.");
-		} while (std::cin.get() != '\n');
-		lua_close(L);
-		return 1;
-	}
 	catch (std::filesystem::filesystem_error const& ex) {
 		std::cout
 			<< "what():  " << ex.what() << '\n'
@@ -88,6 +76,16 @@ int main(int argc, char** argv) {
 			<< "code().value():    " << ex.code().value() << '\n'
 			<< "code().message():  " << ex.code().message() << '\n'
 			<< "code().category(): " << ex.code().category().name() << '\n';
+		do
+		{
+			Print(COLOURS::RED, "Press any key to exit.");
+		} while (std::cin.get() != '\n');
+		lua_close(L);
+		return 1;
+	}
+	catch (const std::exception& ex)
+	{
+		Print(COLOURS::RED, ex.what());
 		do
 		{
 			Print(COLOURS::RED, "Press any key to exit.");
@@ -111,7 +109,6 @@ int __stdcall ConsoleHandler(DWORD dwCtrlType) {
 		return TRUE;
 	}
 	case CTRL_CLOSE_EVENT: {
-		// if user pressed "X" button on console window
 		return true;
 	}
 	default:

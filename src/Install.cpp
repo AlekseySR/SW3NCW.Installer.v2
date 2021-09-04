@@ -25,10 +25,8 @@ void Install(lua_State* L) {
 		"Choose the Star Wolves 3 Civil War path",
 		"C:\\Program Files (x86)"
 	);
-	// if you closed the window with close buttons - back to menu
 	if (path.empty()) return;
 
-	// check if it's a game directory by check binkw32.dll existance
 	std::string checkFile = path + "binkw32.dll";
 	if (!fileExists(checkFile.c_str())) {
 		Print(COLOURS::RED, "Attempt to start installation sequence with wrong game directory.");
@@ -49,8 +47,6 @@ void Install(lua_State* L) {
 	std::string filePath = ProgCfg->GetFilePath();
 	std::list<std::string> files = ProgCfg->GetModFiles();
 
-	const auto copyOptions = fs::copy_options::update_existing | fs::copy_options::recursive;
-
 	for (const auto& i : files) {
 		fullPath1 = filePath + i;
 
@@ -59,7 +55,6 @@ void Install(lua_State* L) {
 		}
 	}
 
-	// multi-thread logic
 	auto middle = std::next(files.begin(), files.size() / 2);
 
 	std::list<std::string> thList1(files.begin(), middle);
@@ -74,44 +69,13 @@ void Install(lua_State* L) {
 	th2.join();
 
 	Print(COLOURS::STD, "Done.");
-
-	// temp
-	/*
-	fs::create_directories("sandbox/dir/subdir");
-	std::ofstream("sandbox/file1.txt").put('a');
-	fs::copy("sandbox/file1.txt", "sandbox/file2.txt"); // copy file
-	fs::copy("sandbox/dir", "sandbox/dir2"); // copy directory (non-recursive)
-	fs::copy("sandbox", "sandbox_copy", copyOptions);
-	static_cast<void>(std::system("tree"));
-
-	for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(path))
-	{
-		std::wstring file = dirEntry.path().filename();
-		std::wstring ext = dirEntry.path().filename().extension();
-		std::wstring SrcPath = dirEntry.path().parent_path();
-		std::wstring DestPath = SrcPath;
-		DestPath.erase(0, 9);
-
-		std::filesystem::create_directory(DestPath);
-
-		std::wcout << SrcPath << std::endl;
-		std::wcout << DestPath << std::endl;
-
-		// check if its a file with extension, not a directory
-		if (ext != L"")
-		{
-			std::wstring path1 = SrcPath + L"\\" + file;
-			std::wstring path2 = DestPath + L"\\" + file;
-			//FileCopy(path1, path2);
-		}
-	}
-	std::filesystem::remove_all(L"DataTemp\\Data");
-	*/
 }
 
-// thread method for specific container "files"
+// thread method
 void InstallFiles(std::list<std::string>& files, std::string src, std::string dest) {
 	std::string fileName, fullPath1, fullPath2;
+	const auto copyOptions = fs::copy_options::update_existing | fs::copy_options::recursive;
+
 	for (const auto& i : files) {
 		fileName = i;
 		Print(COLOURS::STD,
@@ -138,14 +102,13 @@ void InstallFiles(std::list<std::string>& files, std::string src, std::string de
 	}
 }
 
-bool FileCopy(std::wstring& from, std::wstring& to) {
+bool FileCopy(std::string& from, std::string& to) {
 	std::ifstream SrcFile(from, std::ifstream::binary);
 	std::ofstream DestFile(to, std::ifstream::binary);
 
 	if (SrcFile) {
-		// get length of file:
 		SrcFile.seekg(0, SrcFile.end);
-		int length = SrcFile.tellg();
+		double length = SrcFile.tellg();
 		SrcFile.seekg(0, SrcFile.beg);
 
 		char* buffer = new char[length];
@@ -190,7 +153,6 @@ std::string BrowseForFolder(std::string textTitle, std::string InitPath) {
 		result = destbuff;
 		result += "\\";
 	}
-	// don't forget to clean the waste
 	delete[] destbuff;
 	return result;
 }

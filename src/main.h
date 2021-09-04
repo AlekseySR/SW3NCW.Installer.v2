@@ -1,20 +1,12 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-// Can't compile without it in C++17
-#define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
-#include <codecvt>
-
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <string>
-#include <vector>
-#include <list>
 #include <clocale>
 #include <memory>
-#include <thread>
-#include <chrono>
 #include <Shlwapi.h>
 #include <shlobj.h>
 
